@@ -113,7 +113,7 @@ export default {
       let clients = [];
       clients.push({
         name: "Generated " + this.generateName(),
-        files: this.generateFiles(this.size),
+        files: [this.generateFiles(this.size)[0]],
         timeWaiting: this.time,
         priority: 0
       });
