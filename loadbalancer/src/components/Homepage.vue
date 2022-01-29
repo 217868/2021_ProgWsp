@@ -10,7 +10,7 @@
       <div class="clientsList">
         <div class="header">
           <div class="clientNameHeader">Nazwa klienta</div>
-          <div class="fileSizeHeader">Rozmiar pliku [mb]</div>
+          <div class="fileSizeHeader">Pliki klienta [MB]</div>
           <div class="timeHeader">Czas oczekiwania [s]</div>
           <div class="priorityHeader">Priorytet</div>
         </div>
@@ -18,7 +18,7 @@
           <div class="allClients">
             <div v-for="client in clientsQueue" :key="client.name" class="client">
               <div>{{client.name}}</div>
-              <div>{{Math.trunc(client.fileSize)}}</div>
+              <div>{{client.files && showClientFiles(client.files)}}</div>
               <div>{{client.timeWaiting}}</div>
               <div>{{client.priority}}</div>
             </div>
@@ -37,7 +37,7 @@
         <div class="createSection">
           <div class="sectionHeader">Stwórz klienta:</div>
           <div class="sectionContent">
-            <input v-model="size" class="input" type="number" placeholder="Rozmiar pliku"/>
+            <input v-model="size" class="input" type="number" placeholder="Rozmiar plików"/>
             <input v-model="time" class="input" type="number" placeholder="Czas oczekiwania"/>
             <button @click="addClient">Stwórz</button>
           </div>
@@ -49,14 +49,14 @@
 
 <script>
 import * as loadBalancer from '../helpers/loadBalancer.js'
-import * as nameGenerator from '../helpers/nameGenerator.js'
 import Thread from './Thread.vue'
 
 export default {
   name: 'Homepage',
   data() {
     return {
-      generatedNo: 0
+      generatedNo: 0,
+      addClientNo: 1
     }
   },
   components: {
@@ -64,7 +64,7 @@ export default {
   },
   computed: {
     clientsQueue() {
-      return this.$store.state.clients.filter((client) => !client.isBeingServed);
+      return this.$store.state.clients.filter((client) => !client.isBeingServed).sort((client1, client2) => client2.priority - client1.priority);
     },
     threads() {
       return this.$store.state.threads;
@@ -76,25 +76,45 @@ export default {
 
       for(let i = 0; i < this.generatedNo; i++) {
         clients.push({
-          name: nameGenerator.generateName(),
-          fileSize: Math.random() * 10000,
+          name: this.generateName(),
+          files: this.generateFiles(undefined),
           timeWaiting: 1,
-          isBeingServed: false,
-          percentageServed: 0,
           priority: 0
         })
       }
 
       this.$store.commit('addClients', clients);
     },
+    generateName() {
+      let name = "Client " + this.addClientNo;
+      this.addClientNo++;
+      return name;
+    },
+    generateFiles(fileSize) {
+      let numOfFiles = Math.ceil((Math.random() + 0.001) * 3)
+      let files = [];
+      for (let i = 0; i < numOfFiles; i++) {
+        files.push({
+          fileSize: fileSize || (Math.random() * 10000),
+          isBeingServed: false,
+          percentageServed: 0,
+        })
+      }
+      return files.sort((a,b) => a.fileSize - b.fileSize);
+    },
+    showClientFiles(files) {
+      let fileSizes = '';
+      files.forEach(file => {
+        fileSizes += Math.trunc(file.fileSize) + "MB "
+      });
+      return fileSizes;
+    },
     addClient() {
       let clients = [];
       clients.push({
-        name: nameGenerator.generateName(),
-        fileSize: this.size,
+        name: "Generated " + this.generateName(),
+        files: this.generateFiles(this.size),
         timeWaiting: this.time,
-        isBeingServed: false,
-        percentageServed: 0,
         priority: 0
       });
 

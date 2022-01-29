@@ -8,31 +8,36 @@ export default createStore({
         number: 0,
         busy: false,
         client: null,
-        mbProcessed: 0.0
+        mbProcessed: 0.0,
+        file: null
       },
       {
         number: 1,
         busy: false,
         client: null,
-        mbProcessed: 0.0
+        mbProcessed: 0.0,
+        file: null
       },
       {
         number: 2,
         busy: false,
         client: null,
-        mbProcessed: 0.0
+        mbProcessed: 0.0,
+        file: null
       },
       {
         number: 3,
         busy: false,
         client: null,
-        mbProcessed: 0.0
+        mbProcessed: 0.0,
+        file: null
       },
       {
         number: 4,
         busy: false,
         client: null,
-        mbProcessed: 0.0
+        mbProcessed: 0.0,
+        file: null
       }
     ]
   },
@@ -51,23 +56,27 @@ export default createStore({
     setThreadBusyState (state, { threadNumber, busy, client }) {
       state.threads[threadNumber].busy = busy;
       state.threads[threadNumber].client = client;
+      state.threads[threadNumber].file = client.files[0];
 
       let clientToChange = {...client};
-      clientToChange.isBeingServed = true;
-
-      state.clients = [...state.clients.map(client => client.name !== clientToChange.name ? client : {...client, ...clientToChange})]
+      clientToChange.files.shift();
+      if (clientToChange.files.length == 0) {
+        state.clients = [...state.clients.filter(client => state.threads[threadNumber].client.name != client.name)];
+      } else {
+        state.clients = [...state.clients.map(client => client.name !== clientToChange.name ? client : {...client, ...clientToChange})]
+      }
     },
 
     threadProcessMb (state, {threadNumber, mb}) {
       let thread = state.threads[threadNumber]
       thread.mbProcessed += mb;
-      thread.client.percentageServed = (thread.mbProcessed / thread.client.fileSize);
+      thread.file.percentageServed = (thread.mbProcessed / thread.file.fileSize);
 
-      if (thread.client.fileSize > thread.mbProcessed) return;
+      if (thread.file.fileSize > thread.mbProcessed) return;
 
-      state.clients = state.clients.filter(client => thread.client.name != client.name);
       thread.busy = false;
       thread.client = null;
+      thread.file = null;
       thread.mbProcessed = 0.0;
     }
   },
@@ -78,6 +87,8 @@ export default createStore({
 })
 
 function calculatePriority(state, client) {
-  let numOfClients = state.clients.filter((client) => !client.isBeingServed).length * 1000;
-  return (numOfClients/client.fileSize) + (client.timeWaiting/numOfClients);
+  if (client.files.length == 0) return 0;
+
+  let numOfClients = state.clients.length * 1000;
+  return (numOfClients/client.files[0].fileSize) + ((client.timeWaiting * 10)/numOfClients);
 }

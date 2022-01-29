@@ -3,13 +3,13 @@
         <div class="progressBarContainer">
             <div class="progressBar" :style="{ width: width }"/>
             <div class="percentage">
-                {{ thread.client ? Math.trunc(thread.client.percentageServed * 100) + '%' : '0%' }}
+                {{ thread.file ? Math.trunc(thread.file.percentageServed * 100) + '%' : '0%' }}
             </div>
         </div>
         <div class="client" v-if="thread.client">
             <div class="name">{{thread.client ? thread.client.name : ''}}</div>
             <div class="timeWaiting">{{thread.client ? thread.client.timeWaiting : 0}}s</div>
-            <div class="fileSize">{{thread.client ? Math.trunc(thread.client.fileSize) : 0.0}}mb</div>
+            <div class="fileSize">{{thread.file ? Math.trunc(thread.file.fileSize) : 0.0}}MB</div>
         </div>
   </div>
 </template>
@@ -23,7 +23,7 @@ export default {
   },
   computed: {
       width() {
-          return this.thread.client ? Math.trunc(this.thread.client.percentageServed * 150) + 'px' : '1px';
+          return this.thread.file ? Math.trunc(this.thread.file.percentageServed * 150) + 'px' : '1px';
       }
   }
 }

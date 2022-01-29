@@ -1,6 +1,6 @@
 export function initiate(store) {
     setInterval(() => {
-        var clientsQueue = store.state.clients.filter((client) => !client.isBeingServed);
+        var clientsQueue = store.state.clients.filter((client) => client.files.length > 0);
         var freeThreads = store.state.threads.filter((thread) => !thread.busy);
 
         if (freeThreads.length < 1 || clientsQueue.length < 1) return;
